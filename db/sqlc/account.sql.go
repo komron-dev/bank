@@ -7,13 +7,40 @@ import (
 	"context"
 )
 
+const addAcountBalance = `-- name: AddAcountBalance :one
+UPDATE accounts
+SET balance = balance + $1
+WHERE id = $2
+RETURNING id, owner, balance, currency, created_at, updated_at, deleted_at
+`
+
+type AddAcountBalanceParams struct {
+	Amount int64 `json:"amount"`
+	ID     int64 `json:"id"`
+}
+
+func (q *Queries) AddAcountBalance(ctx context.Context, arg AddAcountBalanceParams) (Account, error) {
+	row := q.queryRow(ctx, q.addAcountBalanceStmt, addAcountBalance, arg.Amount, arg.ID)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.Owner,
+		&i.Balance,
+		&i.Currency,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const createAccount = `-- name: CreateAccount :one
-INSERT INTO accounts(
-    owner,
-    balance,
-    currency
+INSERT INTO accounts (
+  owner,
+  balance,
+  currency
 ) VALUES (
-    $1, $2, $3
+  $1, $2, $3
 ) RETURNING id, owner, balance, currency, created_at, updated_at, deleted_at
 `
 
@@ -49,7 +76,7 @@ func (q *Queries) DeleteAccount(ctx context.Context, id int64) error {
 }
 
 const getAccount = `-- name: GetAccount :one
-SELECT id, owner, balance, currency, created_at, updated_at, deleted_at FROM accounts 
+SELECT id, owner, balance, currency, created_at, updated_at, deleted_at FROM accounts
 WHERE id = $1 LIMIT 1
 `
 
@@ -68,26 +95,14 @@ func (q *Queries) GetAccount(ctx context.Context, id int64) (Account, error) {
 	return i, err
 }
 
-const getAccountsCount = `-- name: GetAccountsCount :one
-SELECT COUNT(*) FROM accounts
+const getAccountForUpdate = `-- name: GetAccountForUpdate :one
+SELECT id, owner, balance, currency, created_at, updated_at, deleted_at FROM accounts
+WHERE id = $1 LIMIT 1
+FOR NO KEY UPDATE
 `
 
-func (q *Queries) GetAccountsCount(ctx context.Context) (int64, error) {
-	row := q.queryRow(ctx, q.getAccountsCountStmt, getAccountsCount)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
-const getRandomAccount = `-- name: GetRandomAccount :one
-SELECT id, owner, balance, currency, created_at, updated_at, deleted_at
-FROM accounts
-ORDER BY RANDOM()
-LIMIT 1
-`
-
-func (q *Queries) GetRandomAccount(ctx context.Context) (Account, error) {
-	row := q.queryRow(ctx, q.getRandomAccountStmt, getRandomAccount)
+func (q *Queries) GetAccountForUpdate(ctx context.Context, id int64) (Account, error) {
+	row := q.queryRow(ctx, q.getAccountForUpdateStmt, getAccountForUpdate, id)
 	var i Account
 	err := row.Scan(
 		&i.ID,
@@ -104,7 +119,8 @@ func (q *Queries) GetRandomAccount(ctx context.Context) (Account, error) {
 const listAccounts = `-- name: ListAccounts :many
 SELECT id, owner, balance, currency, created_at, updated_at, deleted_at FROM accounts
 ORDER BY id
-LIMIT $1 OFFSET $2
+LIMIT $1
+OFFSET $2
 `
 
 type ListAccountsParams struct {

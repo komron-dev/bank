@@ -9,11 +9,11 @@ import (
 
 const createTransfer = `-- name: CreateTransfer :one
 INSERT INTO transfers (
-    sender_id,
-    reciepent_id,
-    amount
+  sender_id,
+  reciepent_id,
+  amount
 ) VALUES (
-    $1, $2, $3
+  $1, $2, $3
 ) RETURNING id, reciepent_id, sender_id, amount, created_at, updated_at, deleted_at
 `
 
@@ -25,28 +25,6 @@ type CreateTransferParams struct {
 
 func (q *Queries) CreateTransfer(ctx context.Context, arg CreateTransferParams) (Transfer, error) {
 	row := q.queryRow(ctx, q.createTransferStmt, createTransfer, arg.SenderID, arg.ReciepentID, arg.Amount)
-	var i Transfer
-	err := row.Scan(
-		&i.ID,
-		&i.ReciepentID,
-		&i.SenderID,
-		&i.Amount,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
-	)
-	return i, err
-}
-
-const getRandomTransfer = `-- name: GetRandomTransfer :one
-SELECT id, reciepent_id, sender_id, amount, created_at, updated_at, deleted_at
-FROM transfers
-ORDER BY RANDOM()
-LIMIT 1
-`
-
-func (q *Queries) GetRandomTransfer(ctx context.Context) (Transfer, error) {
-	row := q.queryRow(ctx, q.getRandomTransferStmt, getRandomTransfer)
 	var i Transfer
 	err := row.Scan(
 		&i.ID,
@@ -80,23 +58,14 @@ func (q *Queries) GetTransfer(ctx context.Context, id int64) (Transfer, error) {
 	return i, err
 }
 
-const getTransfersCount = `-- name: GetTransfersCount :one
-SELECT COUNT(*) FROM transfers
-`
-
-func (q *Queries) GetTransfersCount(ctx context.Context) (int64, error) {
-	row := q.queryRow(ctx, q.getTransfersCountStmt, getTransfersCount)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
 const listTransfers = `-- name: ListTransfers :many
 SELECT id, reciepent_id, sender_id, amount, created_at, updated_at, deleted_at FROM transfers
-WHERE sender_id = $1 
-OR reciepent_id = $2
-ORDER BY id 
-LIMIT $3 OFFSET $4
+WHERE 
+    sender_id = $1 OR
+    reciepent_id = $2
+ORDER BY id
+LIMIT $3
+OFFSET $4
 `
 
 type ListTransfersParams struct {

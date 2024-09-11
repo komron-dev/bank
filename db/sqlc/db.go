@@ -22,6 +22,9 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.addAcountBalanceStmt, err = db.PrepareContext(ctx, addAcountBalance); err != nil {
+		return nil, fmt.Errorf("error preparing query AddAcountBalance: %w", err)
+	}
 	if q.createAccountStmt, err = db.PrepareContext(ctx, createAccount); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateAccount: %w", err)
 	}
@@ -37,29 +40,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getAccountStmt, err = db.PrepareContext(ctx, getAccount); err != nil {
 		return nil, fmt.Errorf("error preparing query GetAccount: %w", err)
 	}
-	if q.getAccountsCountStmt, err = db.PrepareContext(ctx, getAccountsCount); err != nil {
-		return nil, fmt.Errorf("error preparing query GetAccountsCount: %w", err)
-	}
-	if q.getEntriesCountStmt, err = db.PrepareContext(ctx, getEntriesCount); err != nil {
-		return nil, fmt.Errorf("error preparing query GetEntriesCount: %w", err)
+	if q.getAccountForUpdateStmt, err = db.PrepareContext(ctx, getAccountForUpdate); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAccountForUpdate: %w", err)
 	}
 	if q.getEntryStmt, err = db.PrepareContext(ctx, getEntry); err != nil {
 		return nil, fmt.Errorf("error preparing query GetEntry: %w", err)
 	}
-	if q.getRandomAccountStmt, err = db.PrepareContext(ctx, getRandomAccount); err != nil {
-		return nil, fmt.Errorf("error preparing query GetRandomAccount: %w", err)
-	}
-	if q.getRandomEntryStmt, err = db.PrepareContext(ctx, getRandomEntry); err != nil {
-		return nil, fmt.Errorf("error preparing query GetRandomEntry: %w", err)
-	}
-	if q.getRandomTransferStmt, err = db.PrepareContext(ctx, getRandomTransfer); err != nil {
-		return nil, fmt.Errorf("error preparing query GetRandomTransfer: %w", err)
-	}
 	if q.getTransferStmt, err = db.PrepareContext(ctx, getTransfer); err != nil {
 		return nil, fmt.Errorf("error preparing query GetTransfer: %w", err)
-	}
-	if q.getTransfersCountStmt, err = db.PrepareContext(ctx, getTransfersCount); err != nil {
-		return nil, fmt.Errorf("error preparing query GetTransfersCount: %w", err)
 	}
 	if q.listAccountsStmt, err = db.PrepareContext(ctx, listAccounts); err != nil {
 		return nil, fmt.Errorf("error preparing query ListAccounts: %w", err)
@@ -78,6 +66,11 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 
 func (q *Queries) Close() error {
 	var err error
+	if q.addAcountBalanceStmt != nil {
+		if cerr := q.addAcountBalanceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing addAcountBalanceStmt: %w", cerr)
+		}
+	}
 	if q.createAccountStmt != nil {
 		if cerr := q.createAccountStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createAccountStmt: %w", cerr)
@@ -103,14 +96,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getAccountStmt: %w", cerr)
 		}
 	}
-	if q.getAccountsCountStmt != nil {
-		if cerr := q.getAccountsCountStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getAccountsCountStmt: %w", cerr)
-		}
-	}
-	if q.getEntriesCountStmt != nil {
-		if cerr := q.getEntriesCountStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getEntriesCountStmt: %w", cerr)
+	if q.getAccountForUpdateStmt != nil {
+		if cerr := q.getAccountForUpdateStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAccountForUpdateStmt: %w", cerr)
 		}
 	}
 	if q.getEntryStmt != nil {
@@ -118,29 +106,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getEntryStmt: %w", cerr)
 		}
 	}
-	if q.getRandomAccountStmt != nil {
-		if cerr := q.getRandomAccountStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getRandomAccountStmt: %w", cerr)
-		}
-	}
-	if q.getRandomEntryStmt != nil {
-		if cerr := q.getRandomEntryStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getRandomEntryStmt: %w", cerr)
-		}
-	}
-	if q.getRandomTransferStmt != nil {
-		if cerr := q.getRandomTransferStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getRandomTransferStmt: %w", cerr)
-		}
-	}
 	if q.getTransferStmt != nil {
 		if cerr := q.getTransferStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getTransferStmt: %w", cerr)
-		}
-	}
-	if q.getTransfersCountStmt != nil {
-		if cerr := q.getTransfersCountStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getTransfersCountStmt: %w", cerr)
 		}
 	}
 	if q.listAccountsStmt != nil {
@@ -200,47 +168,39 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                    DBTX
-	tx                    *sql.Tx
-	createAccountStmt     *sql.Stmt
-	createEntryStmt       *sql.Stmt
-	createTransferStmt    *sql.Stmt
-	deleteAccountStmt     *sql.Stmt
-	getAccountStmt        *sql.Stmt
-	getAccountsCountStmt  *sql.Stmt
-	getEntriesCountStmt   *sql.Stmt
-	getEntryStmt          *sql.Stmt
-	getRandomAccountStmt  *sql.Stmt
-	getRandomEntryStmt    *sql.Stmt
-	getRandomTransferStmt *sql.Stmt
-	getTransferStmt       *sql.Stmt
-	getTransfersCountStmt *sql.Stmt
-	listAccountsStmt      *sql.Stmt
-	listEntriesStmt       *sql.Stmt
-	listTransfersStmt     *sql.Stmt
-	updateAccountStmt     *sql.Stmt
+	db                      DBTX
+	tx                      *sql.Tx
+	addAcountBalanceStmt    *sql.Stmt
+	createAccountStmt       *sql.Stmt
+	createEntryStmt         *sql.Stmt
+	createTransferStmt      *sql.Stmt
+	deleteAccountStmt       *sql.Stmt
+	getAccountStmt          *sql.Stmt
+	getAccountForUpdateStmt *sql.Stmt
+	getEntryStmt            *sql.Stmt
+	getTransferStmt         *sql.Stmt
+	listAccountsStmt        *sql.Stmt
+	listEntriesStmt         *sql.Stmt
+	listTransfersStmt       *sql.Stmt
+	updateAccountStmt       *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                    tx,
-		tx:                    tx,
-		createAccountStmt:     q.createAccountStmt,
-		createEntryStmt:       q.createEntryStmt,
-		createTransferStmt:    q.createTransferStmt,
-		deleteAccountStmt:     q.deleteAccountStmt,
-		getAccountStmt:        q.getAccountStmt,
-		getAccountsCountStmt:  q.getAccountsCountStmt,
-		getEntriesCountStmt:   q.getEntriesCountStmt,
-		getEntryStmt:          q.getEntryStmt,
-		getRandomAccountStmt:  q.getRandomAccountStmt,
-		getRandomEntryStmt:    q.getRandomEntryStmt,
-		getRandomTransferStmt: q.getRandomTransferStmt,
-		getTransferStmt:       q.getTransferStmt,
-		getTransfersCountStmt: q.getTransfersCountStmt,
-		listAccountsStmt:      q.listAccountsStmt,
-		listEntriesStmt:       q.listEntriesStmt,
-		listTransfersStmt:     q.listTransfersStmt,
-		updateAccountStmt:     q.updateAccountStmt,
+		db:                      tx,
+		tx:                      tx,
+		addAcountBalanceStmt:    q.addAcountBalanceStmt,
+		createAccountStmt:       q.createAccountStmt,
+		createEntryStmt:         q.createEntryStmt,
+		createTransferStmt:      q.createTransferStmt,
+		deleteAccountStmt:       q.deleteAccountStmt,
+		getAccountStmt:          q.getAccountStmt,
+		getAccountForUpdateStmt: q.getAccountForUpdateStmt,
+		getEntryStmt:            q.getEntryStmt,
+		getTransferStmt:         q.getTransferStmt,
+		listAccountsStmt:        q.listAccountsStmt,
+		listEntriesStmt:         q.listEntriesStmt,
+		listTransfersStmt:       q.listTransfersStmt,
+		updateAccountStmt:       q.updateAccountStmt,
 	}
 }

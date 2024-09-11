@@ -37,11 +37,11 @@ func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
 	return tx.Commit()
 }
 
-// type TransferTxParams struct {
-// 	SenderID int64 `json:"sender_id"`
-// 	ReciepentID int64 `json:"reciepent_id"`
-// 	Amount int64 `json:"amount"`
-// }
+type TransferTxParams struct {
+	SenderID int64 `json:"sender_id"`
+	ReciepentID int64 `json:"reciepent_id"`
+	Amount int64 `json:"amount"`
+}
 
 type TransferTxResult struct {
 	Transfer  Transfer `json:"transfer"`
@@ -51,11 +51,13 @@ type TransferTxResult struct {
 	ToEntry  Entry `json:"to_entry"`
 }
 
-func (store *Store) TransferTx(ctx context.Context, arg CreateTransferParams) (TransferTxResult, error) {
+func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
 	var result TransferTxResult
 
 	err := store.execTx(ctx, func(q *Queries) error {
 		var err error
+
+		
 		result.Transfer, err = q.CreateTransfer(ctx, CreateTransferParams{
 			SenderID: arg.SenderID,
 			ReciepentID: arg.ReciepentID,
@@ -80,8 +82,24 @@ func (store *Store) TransferTx(ctx context.Context, arg CreateTransferParams) (T
 		if err != nil {
 			return err
 		}
-		// update account's balance
 		
+		// update account's balance
+		result.Sender, err = q.AddAcountBalance(context.Background(), AddAcountBalanceParams{
+			ID: arg.SenderID,
+			Amount: -arg.Amount,
+		})
+		if err != nil {
+			return err
+		}
+		
+		result.Reciepent, err = q.AddAcountBalance(context.Background(), AddAcountBalanceParams{
+			ID: arg.ReciepentID,
+			Amount: arg.Amount,
+		})
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 
