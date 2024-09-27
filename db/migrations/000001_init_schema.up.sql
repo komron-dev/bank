@@ -3,18 +3,14 @@ CREATE TABLE "accounts" (
     "owner" VARCHAR NOT NULL,
     "balance" BIGINT NOT NULL,
     "currency" VARCHAR NOT NULL,
-    "created_at" timestamptz NOT NULL DEFAULT (now()),
-    "updated_at" timestamptz,
-    "deleted_at" timestamptz
+    "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "entries" (
     "id" bigserial PRIMARY KEY,
     "account_id" BIGINT NOT NULL,
     "amount" BIGINT NOT NULL,
-    "created_at" timestamptz NOT NULL DEFAULT (now()),
-    "updated_at" timestamptz,
-    "deleted_at" timestamptz
+    "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 CREATE TABLE "transfers" (
@@ -22,9 +18,7 @@ CREATE TABLE "transfers" (
     "reciepent_id" BIGINT NOT NULL,
     "sender_id" BIGINT NOT NULL,
     "amount" BIGINT NOT NULL,
-    "created_at" timestamptz NOT NULL DEFAULT (now()),
-    "updated_at" timestamptz,
-    "deleted_at" timestamptz
+    "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
 ALTER TABLE "entries" 

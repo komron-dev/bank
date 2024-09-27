@@ -28,4 +28,6 @@ pre_test:
 test:
 	go test -v -cover ./...
 
-.PHONY: postgres_container create_db drop_db up_migrate down_migrate test
+run:
+	go run main.go
+.PHONY: postgres_container create_db drop_db up_migrate down_migrate test run

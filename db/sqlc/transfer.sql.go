@@ -14,7 +14,7 @@ INSERT INTO transfers (
   amount
 ) VALUES (
   $1, $2, $3
-) RETURNING id, reciepent_id, sender_id, amount, created_at, updated_at, deleted_at
+) RETURNING id, reciepent_id, sender_id, amount, created_at
 `
 
 type CreateTransferParams struct {
@@ -32,14 +32,12 @@ func (q *Queries) CreateTransfer(ctx context.Context, arg CreateTransferParams) 
 		&i.SenderID,
 		&i.Amount,
 		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getTransfer = `-- name: GetTransfer :one
-SELECT id, reciepent_id, sender_id, amount, created_at, updated_at, deleted_at FROM transfers
+SELECT id, reciepent_id, sender_id, amount, created_at FROM transfers
 WHERE id = $1 LIMIT 1
 `
 
@@ -52,14 +50,12 @@ func (q *Queries) GetTransfer(ctx context.Context, id int64) (Transfer, error) {
 		&i.SenderID,
 		&i.Amount,
 		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const listTransfers = `-- name: ListTransfers :many
-SELECT id, reciepent_id, sender_id, amount, created_at, updated_at, deleted_at FROM transfers
+SELECT id, reciepent_id, sender_id, amount, created_at FROM transfers
 WHERE 
     sender_id = $1 OR
     reciepent_id = $2
@@ -86,7 +82,7 @@ func (q *Queries) ListTransfers(ctx context.Context, arg ListTransfersParams) ([
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Transfer
+	items := []Transfer{}
 	for rows.Next() {
 		var i Transfer
 		if err := rows.Scan(
@@ -95,8 +91,6 @@ func (q *Queries) ListTransfers(ctx context.Context, arg ListTransfersParams) ([
 			&i.SenderID,
 			&i.Amount,
 			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.DeletedAt,
 		); err != nil {
 			return nil, err
 		}
