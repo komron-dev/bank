@@ -19,15 +19,13 @@ down_migrate:
 sqlc:
 	sqlc generate
 
-# creates 3 accounts on the database for testing
-pre_test:
-	go test -v -cover -run 'CreateAccount' ./...
-	go test -v -cover -run 'CreateAccount' ./...
-	go test -v -cover -run 'CreateAccount' ./...
 
 test:
 	go test -v -cover ./...
 
+mock:
+	mockgen -package mockdb -destination db/mock/store.go github.com/komron-dev/bank/db/sqlc Store
+
 run:
 	go run main.go
-.PHONY: postgres_container create_db drop_db up_migrate down_migrate test run
+.PHONY: postgres_container create_db drop_db up_migrate down_migrate test run mock

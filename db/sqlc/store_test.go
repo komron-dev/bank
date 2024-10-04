@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
  	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -14,10 +13,11 @@ func TestTransferTx(t *testing.T) {
 	account1 := createRandomAccount(t)
 	account2 := createRandomAccount(t) 
 
-	fmt.Printf("--- Sender: %v ---\n", account1.Owner)
-	fmt.Printf("--- Reciepent: %v ---\n", account2.Owner)
+	// fmt.Printf("--- Sender: %v ---\n", account1.Owner)
+	// fmt.Printf("--- Reciepent: %v ---\n", account2.Owner)
 
-	fmt.Printf(">>> BEFORE: account1 balance: %v, account2 balance: %v\n", account1.Balance, account2.Balance)
+	// fmt.Printf(">>> BEFORE: account1 balance: %v, account2 balance: %v\n", account1.Balance, account2.Balance)
+
 	// run concurrent transfer transactions
 	n := 5
 	amount := int64(10)
@@ -92,7 +92,7 @@ func TestTransferTx(t *testing.T) {
 		require.NotEmpty(t, reciepent)
 		require.Equal(t, account2.ID, reciepent.ID)
 
-		fmt.Printf("----- tx: %v,  %v\n", sender.Balance, reciepent.Balance)
+		// fmt.Printf("----- tx: %v,  %v\n", sender.Balance, reciepent.Balance)
 		// accounts' balace
 		diff1 := account1.Balance - sender.Balance
 		diff2 := reciepent.Balance - account2.Balance
@@ -116,7 +116,7 @@ func TestTransferTx(t *testing.T) {
 	require.Equal(t, account1.Balance - int64(n)*amount, updatedAccount1.Balance)
 	require.Equal(t, account2.Balance + int64(n)*amount, updatedAccount2.Balance)
 
-	fmt.Printf(">>> AFTER: account1 balance: %v, account2 balance: %v\n", updatedAccount1.Balance, updatedAccount2.Balance)
+	// fmt.Printf(">>> AFTER: account1 balance: %v, account2 balance: %v\n", updatedAccount1.Balance, updatedAccount2.Balance)
 
 }
 
@@ -126,10 +126,10 @@ func TestTransferTxDeadlock(t *testing.T) {
 	account1 := createRandomAccount(t)
 	account2 := createRandomAccount(t) 
 
-	fmt.Printf("--- Sender: %v ---\n", account1.Owner)
-	fmt.Printf("--- Reciepent: %v ---\n", account2.Owner)
+	// fmt.Printf("--- Sender: %v ---\n", account1.Owner)
+	// fmt.Printf("--- Reciepent: %v ---\n", account2.Owner)
 
-	fmt.Printf(">>> BEFORE: account1 balance: %v, account2 balance: %v\n", account1.Balance, account2.Balance)
+	// fmt.Printf(">>> BEFORE: account1 balance: %v, account2 balance: %v\n", account1.Balance, account2.Balance)
 	// run concurrent transfer transactions
 	n := 10
 	amount := int64(10)
@@ -168,7 +168,7 @@ func TestTransferTxDeadlock(t *testing.T) {
 	updatedAccount2, err := testQueries.GetAccount(context.Background(), account2.ID)
 	require.NoError(t, err)
 	
-	fmt.Printf(">>> AFTER: account1 balance: %v, account2 balance: %v\n", updatedAccount1.Balance, updatedAccount2.Balance)
+	// fmt.Printf(">>> AFTER: account1 balance: %v, account2 balance: %v\n", updatedAccount1.Balance, updatedAccount2.Balance)
 
 	require.Equal(t, account1.Balance, updatedAccount1.Balance)
 	require.Equal(t, account2.Balance, updatedAccount2.Balance)
