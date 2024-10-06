@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 )
+
 type Store interface {
 	Querier
 	TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error)
@@ -17,7 +18,7 @@ type SQLStore struct {
 
 func NewStore(db *sql.DB) Store {
 	return &SQLStore{
-		db: db,
+		db:      db,
 		Queries: New(db),
 	}
 }
@@ -42,30 +43,33 @@ func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) erro
 }
 
 type TransferTxParams struct {
-	SenderID int64 `json:"sender_id"`
-	ReciepentID int64 `json:"reciepent_id"`
-	Amount int64 `json:"amount"`
+	SenderID    int64 `json:"sender_id"`
+	RecipientID int64 `json:"recipient_id"`
+	Amount      int64 `json:"amount"`
 }
 
 type TransferTxResult struct {
 	Transfer  Transfer `json:"transfer"`
-	Sender  Account `json:"sender"`
-	Reciepent  Account `json:"reciepent"`
-	FromEntry  Entry `json:"from_entry"`
-	ToEntry  Entry `json:"to_entry"`
+	Sender    Account  `json:"sender"`
+	Recipient Account  `json:"recipient"`
+	FromEntry Entry    `json:"from_entry"`
+	ToEntry   Entry    `json:"to_entry"`
 }
 
 func (store *SQLStore) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
-	var result TransferTxResult
+	account, err := store.GetAccount(ctx, arg.SenderID)
+	if account.Balance < arg.Amount {
+		return TransferTxResult{}, fmt.Errorf("not enough funds in sender account (ID: %d), current balance: %d, required: %d", arg.SenderID, account.Balance, arg.Amount)
+	}
 
-	err := store.execTx(ctx, func(q *Queries) error {
+	var result TransferTxResult
+	err = store.execTx(ctx, func(q *Queries) error {
 		var err error
 
-		
 		result.Transfer, err = q.CreateTransfer(ctx, CreateTransferParams{
-			SenderID: arg.SenderID,
-			ReciepentID: arg.ReciepentID,
-			Amount: arg.Amount,
+			SenderID:    arg.SenderID,
+			RecipientID: arg.RecipientID,
+			Amount:      arg.Amount,
 		})
 		if err != nil {
 			return err
@@ -73,26 +77,26 @@ func (store *SQLStore) TransferTx(ctx context.Context, arg TransferTxParams) (Tr
 
 		result.FromEntry, err = q.CreateEntry(ctx, CreateEntryParams{
 			AccountID: arg.SenderID,
-			Amount: -arg.Amount,
+			Amount:    -arg.Amount,
 		})
 		if err != nil {
 			return err
 		}
 
 		result.ToEntry, err = q.CreateEntry(ctx, CreateEntryParams{
-			AccountID: arg.ReciepentID,
-			Amount: arg.Amount,
+			AccountID: arg.RecipientID,
+			Amount:    arg.Amount,
 		})
 		if err != nil {
 			return err
 		}
-		
+
 		// update account's balance
 
-		if arg.SenderID < arg.ReciepentID {
-			result.Sender, result.Reciepent, err =  addMoney(ctx, q, arg.SenderID, -arg.Amount, arg.ReciepentID, arg.Amount)
+		if arg.SenderID < arg.RecipientID {
+			result.Sender, result.Recipient, err = addMoney(ctx, q, arg.SenderID, -arg.Amount, arg.RecipientID, arg.Amount)
 		} else {
-			result.Reciepent, result.Sender, err =  addMoney(ctx, q, arg.ReciepentID, arg.Amount, arg.SenderID, -arg.Amount)
+			result.Recipient, result.Sender, err = addMoney(ctx, q, arg.RecipientID, arg.Amount, arg.SenderID, -arg.Amount)
 		}
 
 		return err
@@ -109,17 +113,17 @@ func addMoney(
 	accountID2 int64,
 	amount2 int64,
 ) (account1 Account, account2 Account, err error) {
-	account1, err = q.AddAcountBalance(ctx, AddAcountBalanceParams{
+	account1, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
 		Amount: amount1,
-		ID: accountID1,
+		ID:     accountID1,
 	})
 	if err != nil {
 		return
 	}
 
-	account2, err = q.AddAcountBalance(ctx, AddAcountBalanceParams{
+	account2, err = q.AddAccountBalance(ctx, AddAccountBalanceParams{
 		Amount: amount2,
-		ID: accountID2,
+		ID:     accountID2,
 	})
 	if err != nil {
 		return

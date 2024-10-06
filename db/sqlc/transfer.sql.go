@@ -10,25 +10,25 @@ import (
 const createTransfer = `-- name: CreateTransfer :one
 INSERT INTO transfers (
   sender_id,
-  reciepent_id,
+  recipient_id,
   amount
 ) VALUES (
   $1, $2, $3
-) RETURNING id, reciepent_id, sender_id, amount, created_at
+) RETURNING id, recipient_id, sender_id, amount, created_at
 `
 
 type CreateTransferParams struct {
 	SenderID    int64 `json:"sender_id"`
-	ReciepentID int64 `json:"reciepent_id"`
+	RecipientID int64 `json:"recipient_id"`
 	Amount      int64 `json:"amount"`
 }
 
 func (q *Queries) CreateTransfer(ctx context.Context, arg CreateTransferParams) (Transfer, error) {
-	row := q.queryRow(ctx, q.createTransferStmt, createTransfer, arg.SenderID, arg.ReciepentID, arg.Amount)
+	row := q.queryRow(ctx, q.createTransferStmt, createTransfer, arg.SenderID, arg.RecipientID, arg.Amount)
 	var i Transfer
 	err := row.Scan(
 		&i.ID,
-		&i.ReciepentID,
+		&i.RecipientID,
 		&i.SenderID,
 		&i.Amount,
 		&i.CreatedAt,
@@ -37,7 +37,7 @@ func (q *Queries) CreateTransfer(ctx context.Context, arg CreateTransferParams) 
 }
 
 const getTransfer = `-- name: GetTransfer :one
-SELECT id, reciepent_id, sender_id, amount, created_at FROM transfers
+SELECT id, recipient_id, sender_id, amount, created_at FROM transfers
 WHERE id = $1 LIMIT 1
 `
 
@@ -46,7 +46,7 @@ func (q *Queries) GetTransfer(ctx context.Context, id int64) (Transfer, error) {
 	var i Transfer
 	err := row.Scan(
 		&i.ID,
-		&i.ReciepentID,
+		&i.RecipientID,
 		&i.SenderID,
 		&i.Amount,
 		&i.CreatedAt,
@@ -55,10 +55,10 @@ func (q *Queries) GetTransfer(ctx context.Context, id int64) (Transfer, error) {
 }
 
 const listTransfers = `-- name: ListTransfers :many
-SELECT id, reciepent_id, sender_id, amount, created_at FROM transfers
+SELECT id, recipient_id, sender_id, amount, created_at FROM transfers
 WHERE 
     sender_id = $1 OR
-    reciepent_id = $2
+    recipient_id = $2
 ORDER BY id
 LIMIT $3
 OFFSET $4
@@ -66,7 +66,7 @@ OFFSET $4
 
 type ListTransfersParams struct {
 	SenderID    int64 `json:"sender_id"`
-	ReciepentID int64 `json:"reciepent_id"`
+	RecipientID int64 `json:"recipient_id"`
 	Limit       int32 `json:"limit"`
 	Offset      int32 `json:"offset"`
 }
@@ -74,7 +74,7 @@ type ListTransfersParams struct {
 func (q *Queries) ListTransfers(ctx context.Context, arg ListTransfersParams) ([]Transfer, error) {
 	rows, err := q.query(ctx, q.listTransfersStmt, listTransfers,
 		arg.SenderID,
-		arg.ReciepentID,
+		arg.RecipientID,
 		arg.Limit,
 		arg.Offset,
 	)
@@ -87,7 +87,7 @@ func (q *Queries) ListTransfers(ctx context.Context, arg ListTransfersParams) ([
 		var i Transfer
 		if err := rows.Scan(
 			&i.ID,
-			&i.ReciepentID,
+			&i.RecipientID,
 			&i.SenderID,
 			&i.Amount,
 			&i.CreatedAt,

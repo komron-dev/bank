@@ -1,7 +1,7 @@
 -- name: CreateTransfer :one
 INSERT INTO transfers (
   sender_id,
-  reciepent_id,
+  recipient_id,
   amount
 ) VALUES (
   $1, $2, $3
@@ -15,7 +15,7 @@ WHERE id = $1 LIMIT 1;
 SELECT * FROM transfers
 WHERE 
     sender_id = $1 OR
-    reciepent_id = $2
+    recipient_id = $2
 ORDER BY id
 LIMIT $3
 OFFSET $4;

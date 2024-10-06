@@ -24,7 +24,7 @@ type Entry struct {
 
 type Transfer struct {
 	ID          int64 `json:"id"`
-	ReciepentID int64 `json:"reciepent_id"`
+	RecipientID int64 `json:"recipient_id"`
 	SenderID    int64 `json:"sender_id"`
 	// must be positive
 	Amount    int64     `json:"amount"`
