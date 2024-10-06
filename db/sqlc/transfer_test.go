@@ -5,15 +5,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/komron-dev/bank/util"
+	"github.com/stretchr/testify/require"
 )
 
 func createRandomTransfer(t *testing.T, account1, account2 Account) Transfer {
 	arg := CreateTransferParams{
-		SenderID: account1.ID,
-		ReciepentID:   account2.ID,
-		Amount:        util.RandomMoney(),
+		SenderID:    account1.ID,
+		RecipientID: account2.ID,
+		Amount:      util.RandomMoney(),
 	}
 
 	transfer, err := testQueries.CreateTransfer(context.Background(), arg)
@@ -21,7 +21,7 @@ func createRandomTransfer(t *testing.T, account1, account2 Account) Transfer {
 	require.NotEmpty(t, transfer)
 
 	require.Equal(t, arg.SenderID, transfer.SenderID)
-	require.Equal(t, arg.ReciepentID, transfer.ReciepentID)
+	require.Equal(t, arg.RecipientID, transfer.RecipientID)
 	require.Equal(t, arg.Amount, transfer.Amount)
 
 	require.NotZero(t, transfer.ID)
@@ -47,7 +47,7 @@ func TestGetTransfer(t *testing.T) {
 
 	require.Equal(t, transfer1.ID, transfer2.ID)
 	require.Equal(t, transfer1.SenderID, transfer2.SenderID)
-	require.Equal(t, transfer1.ReciepentID, transfer2.ReciepentID)
+	require.Equal(t, transfer1.RecipientID, transfer2.RecipientID)
 	require.Equal(t, transfer1.Amount, transfer2.Amount)
 	require.WithinDuration(t, transfer1.CreatedAt, transfer2.CreatedAt, time.Second)
 }
@@ -63,8 +63,8 @@ func TestListTransfers(t *testing.T) {
 
 	arg := ListTransfersParams{
 		SenderID: account1.ID,
-		Limit:         5,
-		Offset:        0,
+		Limit:    5,
+		Offset:   0,
 	}
 
 	transfers, err := testQueries.ListTransfers(context.Background(), arg)
@@ -73,6 +73,6 @@ func TestListTransfers(t *testing.T) {
 
 	for _, transfer := range transfers {
 		require.NotEmpty(t, transfer)
-		require.True(t, transfer.SenderID == account1.ID || transfer.ReciepentID == account1.ID)
+		require.True(t, transfer.SenderID == account1.ID || transfer.RecipientID == account1.ID)
 	}
 }
