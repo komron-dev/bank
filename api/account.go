@@ -9,8 +9,8 @@ import (
 )
 
 type createAccountRequest struct {
-	Owner string `json:"owner" binding:"required"`
-	Currency string `json:"currency" binding:"required,oneof=USD EUR UZS HUF"`
+	Owner    string `json:"owner" binding:"required"`
+	Currency string `json:"currency" binding:"required,currency-validate"`
 }
 
 func (server *Server) createAccount(ctx *gin.Context) {
@@ -21,9 +21,9 @@ func (server *Server) createAccount(ctx *gin.Context) {
 	}
 
 	arg := db.CreateAccountParams{
-		Owner: request.Owner,
+		Owner:    request.Owner,
 		Currency: request.Currency,
-		Balance: 0,
+		Balance:  0,
 	}
 
 	account, err := server.store.CreateAccount(ctx, arg)
@@ -52,7 +52,7 @@ func (server *Server) getAccount(ctx *gin.Context) {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
-		
+
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -61,7 +61,7 @@ func (server *Server) getAccount(ctx *gin.Context) {
 }
 
 type listAccountsRequest struct {
-	PageID int32 `form:"page_id" binding:"required,min=1"`
+	PageID   int32 `form:"page_id" binding:"required,min=1"`
 	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
 }
 
@@ -73,7 +73,7 @@ func (server *Server) listAccounts(ctx *gin.Context) {
 	}
 
 	accounts, err := server.store.ListAccounts(ctx, db.ListAccountsParams{
-		Limit: request.PageSize,
+		Limit:  request.PageSize,
 		Offset: (request.PageID - 1) * request.PageSize,
 	})
 
@@ -86,20 +86,20 @@ func (server *Server) listAccounts(ctx *gin.Context) {
 }
 
 type updateAccountRequest struct {
-	ID int64 `uri:"id" binding:"required,min=1"`
+	ID      int64 `uri:"id" binding:"required,min=1"`
 	Balance int64 `json:"balance" binding:"required"`
 }
 
 func (server *Server) updateAccount(ctx *gin.Context) {
 	var request updateAccountRequest
-	
+
 	if err := ctx.ShouldBindJSON(&request); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
 	account, err := server.store.UpdateAccount(ctx, db.UpdateAccountParams{
-		ID: request.ID,
+		ID:      request.ID,
 		Balance: request.Balance,
 	})
 	if err != nil {
@@ -127,7 +127,7 @@ func (server *Server) deleteAccount(ctx *gin.Context) {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
-		
+
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
