@@ -16,6 +16,14 @@ up_migrate:
 down_migrate:
 	migrate -path db/migrations -database "postgresql://root:secret@localhost:5433/simple_bank?sslmode=disable" -verbose down
 
+up_migrate_last:
+	migrate -path db/migrations -database "postgresql://root:secret@localhost:5433/simple_bank?sslmode=disable" -verbose up 1
+
+down_migrate_last:
+	migrate -path db/migrations -database "postgresql://root:secret@localhost:5433/simple_bank?sslmode=disable" -verbose down 1
+
+new_migration:
+	migrate create -ext sql -dir db/migrations -seq $(name)
 sqlc:
 	sqlc generate
 
