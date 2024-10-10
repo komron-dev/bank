@@ -1,9 +1,10 @@
-package util
+package api
 
 import (
 	"fmt"
 	"github.com/golang/mock/gomock"
 	db "github.com/komron-dev/bank/db/sqlc"
+	"github.com/komron-dev/bank/util"
 	"reflect"
 )
 
@@ -18,7 +19,7 @@ func (e eqCreateUserParamsMatcher) Matches(x interface{}) bool {
 		return false
 	}
 
-	err := CheckPassword(e.password, arg.HashedPassword)
+	err := util.CheckPassword(e.password, arg.HashedPassword)
 	if err != nil {
 		return false
 	}

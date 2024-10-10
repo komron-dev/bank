@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	mockdb "github.com/komron-dev/bank/db/mock"
@@ -15,7 +14,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 )
 
@@ -45,34 +43,6 @@ func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.User) {
 	require.Equal(t, user.FullName, gotUser.FullName)
 	require.Equal(t, user.Email, gotUser.Email)
 	require.Empty(t, gotUser.HashedPassword)
-}
-
-type eqCreateUserParamsMatcher struct {
-	arg      db.CreateUserParams
-	password string
-}
-
-func (e eqCreateUserParamsMatcher) Matches(x interface{}) bool {
-	arg, ok := x.(db.CreateUserParams)
-	if !ok {
-		return false
-	}
-
-	err := util.CheckPassword(e.password, arg.HashedPassword)
-	if err != nil {
-		return false
-	}
-
-	e.arg.HashedPassword = arg.HashedPassword
-	return reflect.DeepEqual(e.arg, arg)
-}
-
-func (e eqCreateUserParamsMatcher) String() string {
-	return fmt.Sprintf("matches arg %v and password %v", e.arg, e.password)
-}
-
-func EqCreateUserParams(arg db.CreateUserParams, password string) gomock.Matcher {
-	return eqCreateUserParamsMatcher{arg, password}
 }
 
 func TestCreateUserAPI(t *testing.T) {
