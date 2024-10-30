@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/komron-dev/bank/token"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -24,10 +25,19 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 		return
 	}
 
-	if !server.isValidAccount(ctx, request.RecipientID, request.Currency) {
+	sender, isValid := server.isValidAccount(ctx, request.SenderID, request.Currency)
+	if !isValid {
 		return
 	}
-	if !server.isValidAccount(ctx, request.SenderID, request.Currency) {
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if sender.Owner != authPayload.Username {
+		err := errors.New("sender account doesn't belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	_, isValid = server.isValidAccount(ctx, request.RecipientID, request.Currency)
+	if !isValid {
 		return
 	}
 
@@ -46,23 +56,23 @@ func (server *Server) createTransfer(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, transfer)
 }
 
-func (server *Server) isValidAccount(ctx *gin.Context, accountID int64, currency string) bool {
+func (server *Server) isValidAccount(ctx *gin.Context, accountID int64, currency string) (db.Account, bool) {
 	account, err := server.store.GetAccount(ctx, accountID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return false
+			return account, false
 		}
 
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return false
+		return account, false
 	}
 
 	if account.Currency != currency {
-		err := fmt.Errorf("account %d currency mismatch: %s and %s", accountID, account.Currency, currency)
+		err := fmt.Errorf("account [%d] currency mismatch: %s vs %s", account.ID, account.Currency, currency)
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return false
+		return account, false
 	}
 
-	return true
+	return account, true
 }
