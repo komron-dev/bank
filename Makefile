@@ -13,9 +13,6 @@ drop_db:
 up_migrate:
 	migrate -path db/migrations -database "postgresql://root:secret@localhost:5433/simplebank?sslmode=disable" -verbose up
 
-up_migrate_prod:
-	migrate -path db/migrations -database "postgresql://root:F3pCoOyc6ls1RiR39PFh@bank.cb0iucqg8bf4.eu-central-1.rds.amazonaws.com:5432/simplebank?sslmode=disable" -verbose up
-
 down_migrate:
 	migrate -path db/migrations -database "postgresql://root:secret@localhost:5433/simplebank?sslmode=disable" -verbose down
 
