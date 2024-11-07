@@ -1,9 +1,9 @@
 # Ongoing pet project about bank (not completed)
 
 A simple banking service that offers APIs to support:
-	1.	Creating and managing bank accounts, each including the account holder’s name, balance, and currency type.
-	2.	Logging all balance updates for every account, ensuring that each deposit or withdrawal generates a new record.
-	3.	Facilitating money transfers between two accounts, using transactions to ensure that both accounts are updated successfully or, if an issue occurs, no changes are made.
+1. Creating and managing bank accounts, each including the account holder’s name, balance, and currency type.
+2. Logging all balance updates for every account, ensuring that each deposit or withdrawal generates a new record.
+3. Facilitating money transfers between two accounts, using transactions to ensure that both accounts are updated successfully or, if an issue occurs, no changes are made.
 
 ## Setup local development
 
