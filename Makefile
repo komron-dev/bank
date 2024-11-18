@@ -11,16 +11,16 @@ drop_db:
 # 	migrate create -ext sql -dir db/migrations -seq init_schema
 
 up_migrate:
-	migrate -path db/migrations -database "postgresql://root:secret@localhost:5433/simplebank?sslmode=disable" -verbose up
+	migrate -path db/migrations -database "postgresql://root:secret@localhost:5432/simplebank?sslmode=disable" -verbose up
 
 down_migrate:
-	migrate -path db/migrations -database "postgresql://root:secret@localhost:5433/simplebank?sslmode=disable" -verbose down
+	migrate -path db/migrations -database "postgresql://root:secret@localhost:5432/simplebank?sslmode=disable" -verbose down
 
 up_migrate_last:
-	migrate -path db/migrations -database "postgresql://root:secret@localhost:5433/simplebank?sslmode=disable" -verbose up 1
+	migrate -path db/migrations -database "postgresql://root:secret@localhost:5432/simplebank?sslmode=disable" -verbose up 1
 
 down_migrate_last:
-	migrate -path db/migrations -database "postgresql://root:secret@localhost:5433/simplebank?sslmode=disable" -verbose down 1
+	migrate -path db/migrations -database "postgresql://root:secret@localhost:5432/simplebank?sslmode=disable" -verbose down 1
 
 new_migration:
 	migrate create -ext sql -dir db/migrations -seq $(name)
