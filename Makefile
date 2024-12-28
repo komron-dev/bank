@@ -34,6 +34,11 @@ test:
 mock:
 	mockgen -package mockdb -destination db/mock/store.go github.com/komron-dev/bank/db/sqlc Store
 
+gen_proto:
+	rm -f pb/*.go
+	protoc --proto_path=proto --go_out=pb --go_opt=paths=source_relative \
+        --go-grpc_out=pb --go-grpc_opt=paths=source_relative \
+        proto/*.proto
 run:
 	go run main.go
-.PHONY: postgres_container create_db drop_db up_migrate up_migrate_last down_migrate down_migrate_last test run mock
+.PHONY: postgres_container create_db drop_db up_migrate up_migrate_last down_migrate down_migrate_last test run mock gen_proto
