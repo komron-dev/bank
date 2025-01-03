@@ -43,8 +43,11 @@ gen_proto:
         --openapiv2_out=doc/swagger --openapiv2_opt=allow_merge=true,merge_file_name=bank \
         proto/*.proto
 
+statik:
+	statik -src=./doc/swagger -dest=./doc
+
 evans:
 	evans --host localhost --port 9090 -r repl cli --package pb --service Bank
 run:
 	go run main.go
-.PHONY: postgres_container create_db drop_db up_migrate up_migrate_last down_migrate down_migrate_last test run mock gen_proto
+.PHONY: postgres_container create_db drop_db up_migrate up_migrate_last down_migrate down_migrate_last test run mock gen_proto statik
