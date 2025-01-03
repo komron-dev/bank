@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"github.com/golang-migrate/migrate/v4"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/komron-dev/bank/grpc_api"
 	"github.com/komron-dev/bank/pb"
@@ -14,6 +16,9 @@ import (
 	"net"
 	"net/http"
 
+	_ "github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/komron-dev/bank/api"
 	db "github.com/komron-dev/bank/db/sqlc"
 	_ "github.com/komron-dev/bank/doc/statik"
@@ -32,6 +37,8 @@ func main() {
 		log.Fatal("cannot connect to db:", err)
 	}
 
+	runDBMigration(config.MigrationURL, config.DBSource)
+
 	store := db.NewStore(conn)
 
 	go runGatewayServer(config, store)
@@ -39,6 +46,18 @@ func main() {
 	//runGinServer(config, store)
 }
 
+func runDBMigration(migrationURL string, dbSource string) {
+	migration, err := migrate.New(migrationURL, dbSource)
+	if err != nil {
+		log.Fatal("cannot create new migration: ", err)
+	}
+
+	if err := migration.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		log.Fatal("cannot run migrate up: ", err)
+	}
+
+	log.Println("db migrated successfully")
+}
 func runGrpcServer(config util.Config, store db.Store) {
 	grpcServer := grpc.NewServer()
 
