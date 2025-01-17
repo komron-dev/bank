@@ -20,7 +20,6 @@ func (server *Server) authorizeUser(ctx context.Context) (*token.Payload, error)
 	}
 
 	values := md.Get(authorizationHeader)
-	fmt.Printf("VALUES: %s\n", values)
 
 	if len(values) == 0 {
 		return nil, fmt.Errorf("missing authorization header")
@@ -28,7 +27,6 @@ func (server *Server) authorizeUser(ctx context.Context) (*token.Payload, error)
 
 	authHeader := values[0]
 	fields := strings.Fields(authHeader)
-	fmt.Printf("FIELDS: %s\n", fields)
 
 	if len(fields) < 2 {
 		return nil, fmt.Errorf("invalid authorization header format")
