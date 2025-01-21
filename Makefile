@@ -48,6 +48,10 @@ statik:
 
 evans:
 	evans --host localhost --port 9090 -r repl cli --package pb --service Bank
+
+redis:
+	docker run --name redis -p 6379:6379 redis:7.4-alpine
+
 run:
 	go run main.go
-.PHONY: postgres_container create_db drop_db up_migrate up_migrate_last down_migrate down_migrate_last test run mock gen_proto statik
+.PHONY: postgres_container create_db drop_db up_migrate up_migrate_last down_migrate down_migrate_last test run mock gen_proto statik redis
