@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/hibiken/asynq"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/komron-dev/bank/grpc_api"
 	"github.com/komron-dev/bank/mail"
 	"github.com/komron-dev/bank/pb"
@@ -24,11 +24,11 @@ import (
 	_ "github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/jackc/pgx/v5"
 	"github.com/komron-dev/bank/api"
 	db "github.com/komron-dev/bank/db/sqlc"
 	_ "github.com/komron-dev/bank/doc/statik"
 	"github.com/komron-dev/bank/util"
-	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -41,7 +41,7 @@ func main() {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
-	conn, err := sql.Open(config.DBDriver, config.DBSource)
+	conn, err := pgxpool.New(context.Background(), config.DBSource)
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot connect to db")
 	}

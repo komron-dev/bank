@@ -2,7 +2,6 @@ package grpc_api
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	db "github.com/komron-dev/bank/db/sqlc"
 	"github.com/komron-dev/bank/pb"
@@ -22,7 +21,7 @@ func (server *Server) LoginUser(ctx context.Context, request *pb.LoginUserReques
 
 	user, err := server.store.GetUser(ctx, request.Username)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, db.ErrRecordNotFound) {
 			return nil, status.Errorf(codes.NotFound, "user not found")
 		}
 		return nil, status.Errorf(codes.Internal, "failed to get a user: %s", err)

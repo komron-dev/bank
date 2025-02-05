@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5"
 )
 
 func newTestServer(t *testing.T, store db.Store) *Server {

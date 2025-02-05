@@ -2,14 +2,12 @@ package grpc_api
 
 import (
 	"context"
-	"errors"
 	"github.com/hibiken/asynq"
 	db "github.com/komron-dev/bank/db/sqlc"
 	"github.com/komron-dev/bank/pb"
 	"github.com/komron-dev/bank/util"
 	"github.com/komron-dev/bank/val"
 	"github.com/komron-dev/bank/worker"
-	"github.com/lib/pq"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -49,12 +47,8 @@ func (server *Server) CreateUser(ctx context.Context, request *pb.CreateUserRequ
 
 	txResult, err := server.store.CreateUserTx(ctx, arg)
 	if err != nil {
-		var pqErr *pq.Error
-		if errors.As(err, &pqErr) {
-			switch pqErr.Code.Name() {
-			case "unique_violation":
-				return nil, status.Errorf(codes.AlreadyExists, "username already exists: %s", err)
-			}
+		if db.ErrorCode(err) == db.UniqueViolation {
+			return nil, status.Errorf(codes.AlreadyExists, "username already exists: %s", err)
 		}
 		return nil, status.Errorf(codes.Internal, "failed to create user: %s", err)
 	}

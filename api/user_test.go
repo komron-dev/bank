@@ -9,7 +9,6 @@ import (
 	mockdb "github.com/komron-dev/bank/db/mock"
 	db "github.com/komron-dev/bank/db/sqlc"
 	"github.com/komron-dev/bank/util"
-	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
@@ -181,14 +180,14 @@ func TestCreateUserAPI(t *testing.T) {
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).Times(1).
-					Return(db.User{}, &pq.Error{Code: "23505"})
+					Return(db.User{}, db.ErrUniqueViolation)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusForbidden, recorder.Code)
 			},
 		},
 		{
-			name: "DuplicateEmail",
+			name: "DuplicateUsername",
 			body: gin.H{
 				"username":  user.Username,
 				"password":  password,
@@ -198,7 +197,7 @@ func TestCreateUserAPI(t *testing.T) {
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).Times(1).
-					Return(db.User{}, &pq.Error{Code: "23505"})
+					Return(db.User{}, db.ErrUniqueViolation)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusForbidden, recorder.Code)

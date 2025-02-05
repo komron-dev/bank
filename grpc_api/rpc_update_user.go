@@ -2,8 +2,8 @@ package grpc_api
 
 import (
 	"context"
-	"database/sql"
 	"errors"
+	"github.com/jackc/pgx/v5/pgtype"
 	db "github.com/komron-dev/bank/db/sqlc"
 	"github.com/komron-dev/bank/pb"
 	"github.com/komron-dev/bank/util"
@@ -31,11 +31,11 @@ func (server *Server) UpdateUser(ctx context.Context, request *pb.UpdateUserRequ
 
 	arg := db.UpdateUserParams{
 		Username: request.GetUsername(),
-		FullName: sql.NullString{
+		FullName: pgtype.Text{
 			String: request.GetFullName(),
 			Valid:  request.FullName != nil,
 		},
-		Email: sql.NullString{
+		Email: pgtype.Text{
 			String: request.GetEmail(),
 			Valid:  request.Email != nil,
 		},
@@ -47,12 +47,12 @@ func (server *Server) UpdateUser(ctx context.Context, request *pb.UpdateUserRequ
 			return nil, status.Errorf(codes.Internal, "failed to hash password: %s", err)
 		}
 
-		arg.HashedPassword = sql.NullString{
+		arg.HashedPassword = pgtype.Text{
 			String: hashedPassword,
 			Valid:  true,
 		}
 
-		arg.PasswordChangedAt = sql.NullTime{
+		arg.PasswordChangedAt = pgtype.Timestamptz{
 			Time:  time.Now(),
 			Valid: true,
 		}
@@ -60,7 +60,7 @@ func (server *Server) UpdateUser(ctx context.Context, request *pb.UpdateUserRequ
 
 	user, err := server.store.UpdateUser(ctx, arg)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, db.ErrRecordNotFound) {
 			return nil, status.Errorf(codes.NotFound, "user not found")
 		}
 		return nil, status.Errorf(codes.Internal, "failed to create user: %s", err)
