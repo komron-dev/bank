@@ -32,12 +32,12 @@ func (server *Server) LoginUser(ctx context.Context, request *pb.LoginUserReques
 		return nil, status.Errorf(codes.NotFound, "password does not match: %s", err)
 	}
 
-	accessToken, accessPayload, err := server.tokenMaker.CreateToken(request.Username, server.config.AccessTokenDuration)
+	accessToken, accessPayload, err := server.tokenMaker.CreateToken(request.Username, user.Role, server.config.AccessTokenDuration)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create access token: %s", err)
 	}
 
-	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(request.Username, server.config.RefreshTokenDuration)
+	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(request.Username, user.Role, server.config.RefreshTokenDuration)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create refresh token: %s", err)
 	}

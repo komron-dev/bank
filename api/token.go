@@ -64,7 +64,7 @@ func (server *Server) renewToken(ctx *gin.Context) {
 		return
 	}
 	accessToken, accessPayload, err := server.tokenMaker.CreateToken(
-		refreshPayload.Username, server.config.AccessTokenDuration)
+		refreshPayload.Username, refreshPayload.Role, server.config.AccessTokenDuration)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))

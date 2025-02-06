@@ -8,40 +8,41 @@ import (
 )
 
 type PasetoMaker struct {
-	paseto    *paseto.V2
-	secretKey string
+	paseto       *paseto.V2
+	symmetricKey []byte
 }
 
-func (maker *PasetoMaker) CreateToken(username string, duration time.Duration) (string, *Payload, error) {
-	payload, err := NewPayload(username, duration)
+func (maker *PasetoMaker) CreateToken(username string, role string, duration time.Duration) (string, *Payload, error) {
+	payload, err := NewPayload(username, role, duration)
 	if err != nil {
 		return "", payload, err
 	}
 
-	token, err := maker.paseto.Encrypt([]byte(maker.secretKey), payload, nil)
+	token, err := maker.paseto.Encrypt(maker.symmetricKey, payload, nil)
 	return token, payload, err
 }
 
 func (maker *PasetoMaker) VerifyToken(token string) (*Payload, error) {
 	payload := &Payload{}
 
-	err := maker.paseto.Decrypt(token, []byte(maker.secretKey), payload, nil)
+	err := maker.paseto.Decrypt(token, maker.symmetricKey, payload, nil)
 	if err != nil {
 		return nil, ErrInvalidToken
 	}
 
 	err = payload.Valid()
 	if err != nil {
-		return nil, ErrExpiredToken
+		return nil, err
 	}
 
 	return payload, nil
 }
 
-func NewPasetoMaker(secretKey string) (Maker, error) {
-	if len(secretKey) != chacha20poly1305.KeySize {
+func NewPasetoMaker(symmetricKey string) (Maker, error) {
+	if len(symmetricKey) != chacha20poly1305.KeySize {
 		return nil, fmt.Errorf("invalid key size: must be exactly %d characters", chacha20poly1305.KeySize)
 	}
 
-	return &PasetoMaker{paseto.NewV2(), secretKey}, nil
+	maker := &PasetoMaker{paseto.NewV2(), []byte(symmetricKey)}
+	return maker, nil
 }

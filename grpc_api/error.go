@@ -28,9 +28,9 @@ func invalidArgumentError(violations []*errdetails.BadRequest_FieldViolation) er
 }
 
 func unauthenticatedError(err error) error {
-	return status.Errorf(codes.Unauthenticated, "unauthorized: %s", err)
+	return status.Errorf(codes.Unauthenticated, "unauthorized: ", err)
 }
 
 func permissionDeniedError(err error) error {
-	return status.Errorf(codes.PermissionDenied, "cannot update other user's info")
+	return status.Errorf(codes.PermissionDenied, "cannot update other user's info: ", err)
 }

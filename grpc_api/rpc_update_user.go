@@ -25,7 +25,7 @@ func (server *Server) UpdateUser(ctx context.Context, request *pb.UpdateUserRequ
 		return nil, invalidArgumentError(violations)
 	}
 
-	if authPayload.Username != request.GetUsername() {
+	if authPayload.Role == util.DepositorRole && authPayload.Username != request.GetUsername() {
 		return nil, permissionDeniedError(err)
 	}
 

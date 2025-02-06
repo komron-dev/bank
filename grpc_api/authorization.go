@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/komron-dev/bank/token"
+	"github.com/komron-dev/bank/util"
 	"google.golang.org/grpc/metadata"
 	"strings"
 )
@@ -12,6 +13,8 @@ const (
 	authorizationHeader = "authorization"
 	authorizationBearer = "bearer"
 )
+
+var AccessibleRoles = []string{util.DepositorRole, util.BankerRole}
 
 func (server *Server) authorizeUser(ctx context.Context) (*token.Payload, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -42,5 +45,18 @@ func (server *Server) authorizeUser(ctx context.Context) (*token.Payload, error)
 		return nil, fmt.Errorf("invalid access token: %s", err)
 	}
 
+	if !hasPermission(payload.Role) {
+		return nil, fmt.Errorf("forbidden role: permission denied")
+	}
 	return payload, nil
+}
+
+func hasPermission(role string) bool {
+	for _, val := range AccessibleRoles {
+		if val == role {
+			return true
+		}
+	}
+
+	return false
 }
