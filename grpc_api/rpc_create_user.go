@@ -45,6 +45,9 @@ func (server *Server) CreateUser(ctx context.Context, request *pb.CreateUserRequ
 		},
 	}
 
+	//log.Info().Msg("-->>>> creating user...") // uncomment to test graceful shutdown
+	//time.Sleep(10 * time.Second) // uncomment to test graceful shutdown
+
 	txResult, err := server.store.CreateUserTx(ctx, arg)
 	if err != nil {
 		if db.ErrorCode(err) == db.UniqueViolation {
@@ -56,6 +59,8 @@ func (server *Server) CreateUser(ctx context.Context, request *pb.CreateUserRequ
 	response := &pb.CreateUserResponse{
 		User: convertUser(txResult.User),
 	}
+
+	// log.Info().Msg("-->>>> DONE creating user...") // uncomment to test graceful shutdown
 
 	return response, nil
 }
