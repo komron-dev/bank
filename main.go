@@ -12,6 +12,7 @@ import (
 	"github.com/komron-dev/bank/pb"
 	"github.com/komron-dev/bank/worker"
 	"github.com/rakyll/statik/fs"
+	"github.com/rs/cors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
@@ -174,7 +175,23 @@ func runGatewayServer(
 	swaggerHandler := http.StripPrefix("/swagger/", http.FileServer(statikFS))
 	mux.Handle("/swagger/", swaggerHandler)
 
-	handler := grpc_api.HttpLogger(mux)
+	c := cors.New(cors.Options{
+		AllowedOrigins: config.AllowedOrgins,
+		AllowedMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodPatch,
+			http.MethodDelete,
+		},
+		AllowedHeaders: []string{
+			"Authorization",
+			"Content-Type",
+		},
+		AllowCredentials: true,
+	})
+	handler := c.Handler(grpc_api.HttpLogger(mux))
+
 	httpServer := &http.Server{
 		Handler: handler,
 		Addr:    config.HTTPServerAddress,
